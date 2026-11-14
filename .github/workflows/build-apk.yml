@@ -29,9 +29,28 @@ jobs:
             || echo "::warning::Font download failed, app will use the phone's Urdu font"
 
       - name: Build debug APK
+        env:
+          VERSION_CODE: ${{ github.run_number }}
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug --stacktrace
+
+      - name: Build signed Play Store bundle (.aab)
+        id: aab
+        env:
+          VERSION_CODE: ${{ github.run_number }}
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ] || [ -z "$UPLOAD_KEYSTORE_PASSWORD" ]; then
+            echo "::warning::KEYSTORE_BASE64 / KEYSTORE_PASSWORD secrets not set, skipping Play Store bundle"
+            exit 0
+          fi
+          echo "$KEYSTORE_BASE64" | tr -d ' \n\r' | base64 -d > "$RUNNER_TEMP/upload-key.p12"
+          export UPLOAD_KEYSTORE_FILE="$RUNNER_TEMP/upload-key.p12"
+          ./gradlew bundleRelease --stacktrace
+          cp app/build/outputs/bundle/release/app-release.aab Quran-Asaan-playstore.aab
+          echo "built=true" >> "$GITHUB_OUTPUT"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
@@ -45,5 +64,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp app/build/outputs/apk/debug/app-debug.apk Quran-Asaan.apk
+          FILES="Quran-Asaan.apk"
+          if [ -f Quran-Asaan-playstore.aab ]; then FILES="$FILES Quran-Asaan-playstore.aab"; fi
           gh release delete latest --yes --cleanup-tag || true
-          gh release create latest Quran-Asaan.apk --title "Quran Asaan app (latest)" --notes "Download Quran-Asaan.apk on your Android phone and install it."
+          gh release create latest $FILES --title "Quran Asaan app (build ${{ github.run_number }})" \
+            --notes "Quran-Asaan.apk: install on your phone. Quran-Asaan-playstore.aab: upload to Google Play Console."

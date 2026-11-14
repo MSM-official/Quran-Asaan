@@ -6,19 +6,38 @@ plugins {
 
 android {
     namespace = "com.shoaib.qurani"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.shoaib.qurani"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 36
+        // GitHub sets VERSION_CODE on every build, so each upload to Play is higher.
+        versionCode = System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = "1.0." + (System.getenv("VERSION_CODE") ?: "0")
+    }
+
+    // Upload key for Google Play. The key file and password come from
+    // GitHub secrets (KEYSTORE_BASE64, KEYSTORE_PASSWORD), never from the repo.
+    val keystoreFile = System.getenv("UPLOAD_KEYSTORE_FILE")
+    val keystorePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+    if (keystoreFile != null && keystorePassword != null) {
+        signingConfigs {
+            create("upload") {
+                storeFile = file(keystoreFile)
+                storePassword = keystorePassword
+                keyAlias = "upload"
+                keyPassword = keystorePassword
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (keystoreFile != null && keystorePassword != null) {
+                signingConfig = signingConfigs.getByName("upload")
+            }
         }
     }
     compileOptions {
