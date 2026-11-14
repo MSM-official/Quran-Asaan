@@ -144,11 +144,11 @@ class MainActivity : ComponentActivity() {
 fun BookScreen() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("book", Context.MODE_PRIVATE) }
-    // The app always opens on the title page; the last page read is kept
-    // so the title page can offer "continue where you left off".
+    // The app reopens on the page the user was reading when they closed it.
+    // The first time ever, it opens on the title page.
     val lastPage = remember { prefs.getInt("last_page", 0).coerceIn(0, SCREENS.lastIndex) }
     val pagerState = rememberPagerState(
-        initialPage = 0,
+        initialPage = lastPage,
         pageCount = { SCREENS.size },
     )
     val scope = rememberCoroutineScope()
@@ -253,6 +253,7 @@ fun BookScreen() {
             confirmButton = {
                 TextButton(onClick = {
                     showClose = false
+                    prefs.edit().putInt("last_page", pagerState.currentPage).commit()
                     activity?.finish()
                 }) { Text("ہاں، بند کریں", color = DeepRed) }
             },
