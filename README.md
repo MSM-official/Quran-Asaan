@@ -32,3 +32,7 @@ git push -u origin main
 - `app/src/main/assets/pages/` — cover, note, summary
 - `app/src/main/java/com/shoaib/qurani/MainActivity.kt` — all app code
 - To make swiping left-to-right instead, change `LayoutDirection.Rtl` to `LayoutDirection.Ltr` in `MainActivity.kt`.
+
+## Download the app
+Latest APK (built automatically by GitHub on every change):
+https://github.com/MSM-official/Quran-Asaan/releases/latest/download/Quran-Asaan.apk
