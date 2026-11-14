@@ -3,7 +3,7 @@
 One Quranic word per screen, taken from the book *آسان قرآنی قطعے* (451 words).
 
 ## What the app does
-- Cover → word 1 … word 451 → author's note → summary
+- Urdu title page (فہمِ قرآن — ڈاکٹر تنویر قاسم) → cover → word 1 … word 451 → author's note → summary
 - Swipe like an Urdu book (next word comes from the left), or use **اگلا / پچھلا**
 - Tap the number at the bottom (e.g. `نمبر 12 / 451`) to jump to any word
 - Pinch to zoom, double-tap to zoom in/out

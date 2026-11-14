@@ -2,12 +2,14 @@ package com.shoaib.qurani
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.graphics.Typeface
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -16,6 +18,10 @@ import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,10 +29,14 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -56,7 +66,11 @@ import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.PlatformTextStyle
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -68,20 +82,40 @@ import kotlinx.coroutines.withContext
 /** Total number of words (cards) in the book. */
 const val WORD_COUNT = 451
 
+/** Marks the Urdu title page (drawn by the app, not an image). */
+const val TITLE = "title"
+
+/** Index of word 1 in [SCREENS]. Word n is at index n + 1. */
+const val FIRST_WORD = 2
+
 /**
- * Every screen of the app, in book order:
- * index 0            -> cover
- * index 1..451       -> one word per screen (same as the book's number)
- * index 452, 453     -> author's note and summary pages
+ * Every screen of the app, in order:
+ * index 0            -> Urdu title page (فہمِ قرآن)
+ * index 1            -> book cover
+ * index 2..452       -> one word per screen (word n at index n + 1)
+ * index 453, 454     -> author's note and summary pages
  */
 val SCREENS: List<String> =
-    listOf("pages/cover.webp") +
+    listOf(TITLE, "pages/cover.webp") +
         (1..WORD_COUNT).map { "cards/w%03d.webp".format(it) } +
         listOf("pages/note.webp", "pages/summary.webp")
+
+/** Nastaliq Urdu font (bundled at build time); falls back to the phone's font. */
+var UrduFont: FontFamily = FontFamily.Default
+
+val Cream = Color(0xFFFDFCBB)
+val Brown = Color(0xFF8A3A12)
+val DeepRed = Color(0xFFC62828)
+val DeepGreen = Color(0xFF2E5E1E)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        UrduFont = try {
+            FontFamily(Typeface.createFromAsset(assets, "fonts/nastaliq.ttf"))
+        } catch (e: Exception) {
+            FontFamily.Default
+        }
         enableEdgeToEdge()
         setContent {
             MaterialTheme(
@@ -107,8 +141,11 @@ class MainActivity : ComponentActivity() {
 fun BookScreen() {
     val context = LocalContext.current
     val prefs = remember { context.getSharedPreferences("book", Context.MODE_PRIVATE) }
+    // The app always opens on the title page; the last page read is kept
+    // so the title page can offer "continue where you left off".
+    val lastPage = remember { prefs.getInt("last_page", 0).coerceIn(0, SCREENS.lastIndex) }
     val pagerState = rememberPagerState(
-        initialPage = prefs.getInt("page", 0).coerceIn(0, SCREENS.lastIndex),
+        initialPage = 0,
         pageCount = { SCREENS.size },
     )
     val scope = rememberCoroutineScope()
@@ -116,7 +153,9 @@ fun BookScreen() {
 
     // Remember the last page that was open.
     LaunchedEffect(pagerState.settledPage) {
-        prefs.edit().putInt("page", pagerState.settledPage).apply()
+        if (pagerState.settledPage > 0) {
+            prefs.edit().putInt("last_page", pagerState.settledPage).apply()
+        }
     }
 
     Scaffold(
@@ -161,10 +200,18 @@ fun BookScreen() {
                 .fillMaxSize()
                 .padding(innerPadding),
         ) { page ->
-            ZoomableAssetImage(
-                path = SCREENS[page],
-                isCurrent = pagerState.settledPage == page,
-            )
+            if (SCREENS[page] == TITLE) {
+                TitlePage(
+                    lastPage = lastPage,
+                    onStart = { scope.launch { pagerState.animateScrollToPage(1) } },
+                    onContinue = { scope.launch { pagerState.scrollToPage(lastPage) } },
+                )
+            } else {
+                ZoomableAssetImage(
+                    path = SCREENS[page],
+                    isCurrent = pagerState.settledPage == page,
+                )
+            }
         }
     }
 
@@ -173,16 +220,73 @@ fun BookScreen() {
             onDismiss = { showGoTo = false },
             onGo = { number ->
                 showGoTo = false
-                scope.launch { pagerState.scrollToPage(number) }
+                scope.launch { pagerState.scrollToPage(number + FIRST_WORD - 1) }
             },
         )
     }
 }
 
 fun labelFor(page: Int): String = when {
-    page == 0 -> "سرورق"
-    page <= WORD_COUNT -> "نمبر $page / $WORD_COUNT"
+    page == 0 -> "فہمِ قرآن"
+    page == 1 -> "سرورق"
+    page < FIRST_WORD + WORD_COUNT -> "نمبر ${page - FIRST_WORD + 1} / $WORD_COUNT"
     else -> "اختتامیہ"
+}
+
+/** Text style for Nastaliq: keeps tall letters from being cut off. */
+fun urduStyle(size: Int, color: Color, lineHeight: Int = size * 2) = TextStyle(
+    fontFamily = UrduFont,
+    fontSize = size.sp,
+    lineHeight = lineHeight.sp,
+    color = color,
+    textAlign = TextAlign.Center,
+    platformStyle = PlatformTextStyle(includeFontPadding = true),
+)
+
+/** The first screen: فہمِ قرآن — ڈاکٹر تنویر قاسم */
+@Composable
+fun TitlePage(lastPage: Int, onStart: () -> Unit, onContinue: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Cream)
+            .padding(14.dp)
+            .border(3.dp, Brown, RoundedCornerShape(18.dp))
+            .padding(6.dp)
+            .border(1.dp, Brown, RoundedCornerShape(14.dp))
+            .padding(20.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                text = "بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ",
+                style = TextStyle(
+                    fontSize = 20.sp,
+                    color = DeepGreen,
+                    textAlign = TextAlign.Center,
+                ),
+            )
+            Spacer(Modifier.height(36.dp))
+            Text(text = "فہمِ قرآن", style = urduStyle(56, DeepRed, 120))
+            Spacer(Modifier.height(8.dp))
+            HorizontalDivider(Modifier.width(140.dp), thickness = 2.dp, color = Brown)
+            Spacer(Modifier.height(8.dp))
+            Text(text = "آسان قرآنی قطعے", style = urduStyle(24, Brown))
+            Spacer(Modifier.height(40.dp))
+            Text(text = "ڈاکٹر تنویر قاسم", style = urduStyle(30, Color(0xFF222222), 70))
+            Spacer(Modifier.height(48.dp))
+            Button(
+                onClick = onStart,
+                colors = ButtonDefaults.buttonColors(containerColor = Brown),
+            ) { Text("شروع کریں", fontSize = 18.sp) }
+            if (lastPage > 1) {
+                Spacer(Modifier.height(12.dp))
+                OutlinedButton(onClick = onContinue) {
+                    Text("جہاں چھوڑا تھا: ${labelFor(lastPage)}", fontSize = 15.sp, color = Brown)
+                }
+            }
+        }
+    }
 }
 
 @Composable
