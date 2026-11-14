@@ -1,10 +1,12 @@
 package com.shoaib.qurani
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
@@ -27,6 +29,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -150,6 +153,11 @@ fun BookScreen() {
     )
     val scope = rememberCoroutineScope()
     var showGoTo by remember { mutableStateOf(false) }
+    var showClose by remember { mutableStateOf(false) }
+    val activity = context as? Activity
+
+    // Phone's Back button asks before closing the app.
+    BackHandler { showClose = true }
 
     // Remember the last page that was open.
     LaunchedEffect(pagerState.settledPage) {
@@ -160,6 +168,28 @@ fun BookScreen() {
 
     Scaffold(
         containerColor = Color.White,
+        topBar = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color(0xFFFDFCEB))
+                    .statusBarsPadding()
+                    .padding(horizontal = 8.dp, vertical = 2.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // RTL: the close button sits on the right-hand side.
+                TextButton(onClick = { showClose = true }) {
+                    Text("✕  بند کریں", fontSize = 16.sp, color = DeepRed, fontWeight = FontWeight.Bold)
+                }
+                Text(
+                    text = "فہمِ قرآن",
+                    fontSize = 16.sp,
+                    color = Brown,
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                )
+            }
+        },
         bottomBar = {
             Row(
                 modifier = Modifier
@@ -213,6 +243,23 @@ fun BookScreen() {
                 )
             }
         }
+    }
+
+    if (showClose) {
+        AlertDialog(
+            onDismissRequest = { showClose = false },
+            title = { Text("ایپ بند کریں؟") },
+            text = { Text("کیا آپ ایپ بند کرنا چاہتے ہیں؟ اگلی بار آپ وہیں سے پڑھ سکیں گے جہاں چھوڑا تھا۔") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showClose = false
+                    activity?.finish()
+                }) { Text("ہاں، بند کریں", color = DeepRed) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClose = false }) { Text("نہیں") }
+            },
+        )
     }
 
     if (showGoTo) {
