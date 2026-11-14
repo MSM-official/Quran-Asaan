@@ -36,3 +36,9 @@ git push -u origin main
 ## Download the app
 Latest APK (built automatically by GitHub on every change):
 https://github.com/MSM-official/Quran-Asaan/releases/latest/download/Quran-Asaan.apk
+
+## iPhone (and any phone): web app
+Open https://msm-official.github.io/Quran-Asaan/ in Safari → Share ⬆️ → **Add to Home Screen**.
+It installs with its own icon, opens full screen, and can work offline
+(tap "سب ڈاؤن لوڈ کریں" on the title page once).
+The web app is in the `web/` folder and uses the same page images as the Android app.

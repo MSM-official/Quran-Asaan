@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>فہمِ قرآن - آسان قرآنی قطعے</title>
+<meta name="description" content="قرآن کے 451 اہم الفاظ — ہر صفحے پر ایک لفظ، معنی اور قرآنی مثالیں۔ ڈاکٹر تنویر قاسم">
+<meta name="theme-color" content="#8A3A12">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="فہمِ قرآن">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FDFCBB; --bar: #FDFCEB; --brown: #8A3A12; --red: #C62828; --green: #2E5E1E;
+    --urdu: "Noto Nastaliq Urdu", "Jameel Noori Nastaleeq", "Urdu Typesetting", serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: #fff; }
+  body {
+    display: flex; flex-direction: column; height: 100vh; height: 100dvh;
+    font-family: -apple-system, "Segoe UI", Roboto, "Noto Naskh Arabic", sans-serif;
+    color: #222; overflow: hidden;
+  }
+  header, footer {
+    background: var(--bar); display: flex; align-items: center; justify-content: space-between;
+    gap: 8px; flex: none;
+  }
+  header { padding: calc(env(safe-area-inset-top) + 4px) 10px 4px; border-bottom: 1px solid #eadfb8; }
+  footer { padding: 8px 12px calc(env(safe-area-inset-bottom) + 8px); border-top: 1px solid #eadfb8; }
+  header .name { color: var(--brown); font-family: var(--urdu); font-size: 15px; line-height: 2.2; }
+  button { font: inherit; cursor: pointer; }
+  .btn {
+    background: var(--brown); color: #fff; border: 0; border-radius: 22px;
+    padding: 9px 20px; font-size: 16px; min-width: 84px;
+  }
+  .btn:disabled { opacity: .35; }
+  .btn.outline { background: transparent; color: var(--brown); border: 1.5px solid var(--brown); }
+  .link { background: none; border: 0; color: var(--brown); font-size: 14px; padding: 6px 4px; }
+  #label { background: none; border: 0; color: var(--brown); font-weight: 700; font-size: 18px; padding: 6px 8px; }
+
+  #pager {
+    flex: 1; min-height: 0; display: flex; overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
+  }
+  #pager::-webkit-scrollbar { display: none; }
+  .page {
+    flex: 0 0 100%; width: 100%; height: 100%; scroll-snap-align: start; scroll-snap-stop: always;
+    display: flex; align-items: center; justify-content: center; padding: 4px;
+  }
+  .page img { max-width: 100%; max-height: 100%; object-fit: contain; display: block; }
+
+  /* Title page */
+  .title-page { background: var(--cream); padding: 12px; }
+  .frame {
+    width: 100%; height: 100%; border: 3px solid var(--brown); border-radius: 18px; padding: 5px;
+  }
+  .frame-in {
+    width: 100%; height: 100%; border: 1px solid var(--brown); border-radius: 14px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 16px; overflow: auto;
+  }
+  .bismillah { color: var(--green); font-size: 20px; margin-bottom: 28px; }
+  .t-main { font-family: var(--urdu); color: var(--red); font-size: 50px; line-height: 2.1; font-weight: 700; margin: 0; }
+  .rule { width: 140px; height: 2px; background: var(--brown); margin: 4px 0 6px; }
+  .t-sub { font-family: var(--urdu); color: var(--brown); font-size: 22px; line-height: 2.2; margin: 0; }
+  .t-author { font-family: var(--urdu); font-size: 28px; line-height: 2.3; margin: 26px 0 30px; }
+  .title-page .btn { font-size: 18px; padding: 11px 30px; }
+  #continue { margin-top: 12px; font-size: 15px; }
+  #offline { margin-top: 22px; }
+
+  /* Overlays */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); display: none;
+    align-items: center; justify-content: center; z-index: 10; padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .dialog { background: #fff; border-radius: 16px; padding: 20px; width: min(340px, 100%); }
+  .dialog h3 { margin: 0 0 14px; color: var(--brown); }
+  .dialog input {
+    width: 100%; font-size: 22px; padding: 10px; border: 1.5px solid #bbb; border-radius: 10px;
+    text-align: center; direction: ltr;
+  }
+  .dialog .row { display: flex; gap: 10px; justify-content: flex-start; margin-top: 16px; }
+  .dialog p { line-height: 1.9; margin: 0 0 8px; }
+
+  #zoom { background: #fff; padding: 0; display: none; flex-direction: column; align-items: stretch; justify-content: flex-start; }
+  #zoom.show { display: flex; }
+  #zoom .bar {
+    background: var(--bar); padding: calc(env(safe-area-inset-top) + 6px) 12px 6px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #zoom .scroll { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; direction: ltr; }
+  #zoom img { width: 240%; max-width: none; display: block; }
+
+  #install-tip {
+    display: none; background: #fff6d6; border-bottom: 1px solid #eadfb8; font-size: 14px;
+    padding: 8px 12px; line-height: 1.8; flex: none;
+  }
+  #install-tip.show { display: block; }
+  #install-tip button { float: left; }
+</style>
+</head>
+<body>
+
+<header>
+  <span class="name">فہمِ قرآن</span>
+  <button class="link" id="help-btn">ایپ کیسے انسٹال کریں؟</button>
+</header>
+
+<div id="install-tip">
+  <button class="link" id="tip-close">✕</button>
+  <span id="tip-text"></span>
+</div>
+
+<main id="pager" aria-live="polite"></main>
+
+<footer>
+  <button class="btn" id="prev">پچھلا</button>
+  <button id="label" aria-label="نمبر پر جائیں">فہمِ قرآن</button>
+  <button class="btn" id="next">اگلا</button>
+</footer>
+
+<!-- Go to number -->
+<div class="overlay" id="goto">
+  <div class="dialog">
+    <h3>نمبر پر جائیں</h3>
+    <input id="goto-num" type="number" inputmode="numeric" min="1" max="451" placeholder="1 – 451">
+    <div class="row">
+      <button class="btn" id="goto-go">جائیں</button>
+      <button class="btn outline" id="goto-cancel">واپس</button>
+    </div>
+  </div>
+</div>
+
+<!-- Install help -->
+<div class="overlay" id="help">
+  <div class="dialog">
+    <h3>ایپ کی طرح انسٹال کریں</h3>
+    <p><b>iPhone (Safari):</b> نیچے <b>شیئر ⬆️</b> بٹن دبائیں، پھر <b>Add to Home Screen</b> اور <b>Add</b>۔</p>
+    <p><b>Android (Chrome):</b> اوپر <b>⋮</b> مینو، پھر <b>Add to Home screen</b> یا <b>Install app</b>۔</p>
+    <p>اس کے بعد ہوم اسکرین پر "فہمِ قرآن" کا آئیکن آ جائے گا۔</p>
+    <div class="row"><button class="btn" id="help-close">ٹھیک ہے</button></div>
+  </div>
+</div>
+
+<!-- Zoom viewer -->
+<div class="overlay" id="zoom">
+  <div class="bar">
+    <span style="color:var(--brown)">انگلی سے ادھر ادھر کریں</span>
+    <button class="btn" id="zoom-close">✕ بند</button>
+  </div>
+  <div class="scroll"><img id="zoom-img" alt=""></div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var WORDS = 451;
+  // Screens: 0 title, 1 cover, 2..452 words (word n at n+1), 453 note, 454 summary
+  var screens = ["title", "pages/cover.webp"];
+  for (var n = 1; n <= WORDS; n++) screens.push("cards/w" + ("00" + n).slice(-3) + ".webp");
+  screens.push("pages/note.webp", "pages/summary.webp");
+  var FIRST_WORD = 2;
+
+  function label(i) {
+    if (i === 0) return "فہمِ قرآن";
+    if (i === 1) return "سرورق";
+    if (i < FIRST_WORD + WORDS) return "نمبر " + (i - FIRST_WORD + 1) + " / " + WORDS;
+    return "اختتامیہ";
+  }
+
+  function store(key, val) {
+    try { if (val === undefined) return localStorage.getItem(key); localStorage.setItem(key, val); }
+    catch (e) { return null; }
+  }
+
+  var pager = document.getElementById("pager");
+  var pages = [];
+  var lastSaved = parseInt(store("last_page") || "0", 10);
+  if (!(lastSaved >= 0 && lastSaved < screens.length)) lastSaved = 0;
+
+  // Build pages
+  screens.forEach(function (src, i) {
+    var sec = document.createElement("section");
+    sec.className = "page";
+    sec.dataset.i = i;
+    if (src === "title") {
+      sec.classList.add("title-page");
+      sec.innerHTML =
+        '<div class="frame"><div class="frame-in">' +
+        '<div class="bismillah">بِسْمِ اللّٰهِ الرَّحْمٰنِ الرَّحِيْمِ</div>' +
+        '<h1 class="t-main">فہمِ قرآن</h1><div class="rule"></div>' +
+        '<p class="t-sub">آسان قرآنی قطعے</p>' +
+        '<p class="t-author">ڈاکٹر تنویر قاسم</p>' +
+        '<button class="btn" id="start">شروع کریں</button>' +
+        '<button class="btn outline" id="continue" hidden></button>' +
+        '<button class="link" id="offline">⬇ انٹرنیٹ کے بغیر پڑھنے کے لیے سب ڈاؤن لوڈ کریں</button>' +
+        "</div></div>";
+    } else {
+      var img = document.createElement("img");
+      img.loading = i <= 3 ? "eager" : "lazy";
+      img.decoding = "async";
+      img.alt = label(i);
+      img.src = src;
+      img.addEventListener("click", function () { openZoom(src); });
+      sec.appendChild(img);
+    }
+    pager.appendChild(sec);
+    pages.push(sec);
+  });
+
+  var current = 0;
+  var prevBtn = document.getElementById("prev");
+  var nextBtn = document.getElementById("next");
+  var labelBtn = document.getElementById("label");
+
+  function go(i, smooth) {
+    i = Math.max(0, Math.min(screens.length - 1, i));
+    pages[i].scrollIntoView({ behavior: smooth ? "smooth" : "auto", inline: "start", block: "nearest" });
+    setCurrent(i);
+  }
+
+  function setCurrent(i) {
+    current = i;
+    labelBtn.textContent = label(i);
+    prevBtn.disabled = i <= 0;
+    nextBtn.disabled = i >= screens.length - 1;
+    if (i > 0) store("last_page", String(i));
+  }
+
+  // Track which page is on screen
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (e) {
+      if (e.isIntersecting && e.intersectionRatio >= 0.6) setCurrent(parseInt(e.target.dataset.i, 10));
+    });
+  }, { root: pager, threshold: [0.6] });
+  pages.forEach(function (p) { io.observe(p); });
+
+  prevBtn.onclick = function () { go(current - 1, true); };
+  nextBtn.onclick = function () { go(current + 1, true); };
+  document.addEventListener("keydown", function (e) {
+    if (document.querySelector(".overlay.show")) return;
+    if (e.key === "ArrowLeft") go(current + 1, true);   // RTL: left = next
+    if (e.key === "ArrowRight") go(current - 1, true);
+  });
+
+  // Title page buttons
+  document.getElementById("start").onclick = function () { go(1, true); };
+  var cont = document.getElementById("continue");
+  if (lastSaved > 1) {
+    cont.hidden = false;
+    cont.textContent = "جہاں چھوڑا تھا: " + label(lastSaved);
+    cont.onclick = function () { go(lastSaved, false); };
+  }
+
+  // Go-to dialog
+  var gotoBox = document.getElementById("goto");
+  var gotoNum = document.getElementById("goto-num");
+  labelBtn.onclick = function () { gotoNum.value = ""; gotoBox.classList.add("show"); setTimeout(function () { gotoNum.focus(); }, 50); };
+  document.getElementById("goto-cancel").onclick = function () { gotoBox.classList.remove("show"); };
+  function doGoto() {
+    var v = parseInt(gotoNum.value, 10);
+    if (v >= 1 && v <= WORDS) { gotoBox.classList.remove("show"); gotoNum.blur(); go(v + FIRST_WORD - 1, false); }
+    else { gotoNum.style.borderColor = "#C62828"; }
+  }
+  document.getElementById("goto-go").onclick = doGoto;
+  gotoNum.addEventListener("keydown", function (e) { if (e.key === "Enter") doGoto(); });
+  gotoNum.addEventListener("input", function () { gotoNum.style.borderColor = ""; });
+
+  // Zoom viewer
+  var zoom = document.getElementById("zoom");
+  var zoomImg = document.getElementById("zoom-img");
+  function openZoom(src) {
+    zoomImg.src = src; zoom.classList.add("show");
+    var sc = zoom.querySelector(".scroll");
+    setTimeout(function () { sc.scrollLeft = (sc.scrollWidth - sc.clientWidth) / 2; sc.scrollTop = 0; }, 60);
+  }
+  document.getElementById("zoom-close").onclick = function () { zoom.classList.remove("show"); };
+
+  // Install help
+  var help = document.getElementById("help");
+  document.getElementById("help-btn").onclick = function () { help.classList.add("show"); };
+  document.getElementById("help-close").onclick = function () { help.classList.remove("show"); };
+  var standalone = window.navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+  if (standalone) document.getElementById("help-btn").hidden = true;
+  var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIOS && !standalone && !store("tip_closed")) {
+    document.getElementById("tip-text").innerHTML =
+      "ایپ بنانے کے لیے: Safari میں <b>شیئر ⬆️</b> دبائیں، پھر <b>Add to Home Screen</b>۔";
+    document.getElementById("install-tip").classList.add("show");
+  }
+  document.getElementById("tip-close").onclick = function () {
+    document.getElementById("install-tip").classList.remove("show"); store("tip_closed", "1");
+  };
+
+  // Download everything for offline use
+  var offBtn = document.getElementById("offline");
+  if (store("offline_done")) offBtn.textContent = "✓ سب صفحات آف لائن کے لیے محفوظ ہیں";
+  offBtn.onclick = function () {
+    if (!("serviceWorker" in navigator)) { offBtn.textContent = "یہ براؤزر آف لائن سپورٹ نہیں کرتا"; return; }
+    offBtn.disabled = true;
+    var list = screens.filter(function (s) { return s !== "title"; });
+    var done = 0, idx = 0, failed = 0;
+    function worker() {
+      if (idx >= list.length) return Promise.resolve();
+      var src = list[idx++];
+      return fetch(src).then(function (r) { if (!r.ok) failed++; }, function () { failed++; })
+        .then(function () { done++; offBtn.textContent = "ڈاؤن لوڈ ہو رہا ہے… " + done + " / " + list.length; return worker(); });
+    }
+    Promise.all([worker(), worker(), worker(), worker(), worker(), worker()]).then(function () {
+      offBtn.disabled = false;
+      if (failed) { offBtn.textContent = "کچھ صفحات رہ گئے، دوبارہ دبائیں (" + failed + ")"; }
+      else { store("offline_done", "1"); offBtn.textContent = "✓ سب صفحات آف لائن کے لیے محفوظ ہیں"; }
+    });
+  };
+
+  // Open where the reader left off (first time: title page)
+  window.addEventListener("load", function () { if (lastSaved > 0) go(lastSaved, false); });
+  setCurrent(0);
+  if (lastSaved > 0) requestAnimationFrame(function () { go(lastSaved, false); });
+
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
+})();
+</script>
+</body>
+</html>
